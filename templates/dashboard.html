@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Pipeline Express{% endblock %}
+
+{% block content %}
+<div class="page active" id="dashboard-page">
+    <header class="dashboard-header">
+        <nav class="dashboard-nav">
+            <div class="logo">Pipeline Express</div>
+            <div class="user-actions">
+                <a href="{{ url_for('index') }}" class="back-btn">← Back to Home</a>
+                <button class="settings-btn" onclick="showSettings()">⚙️ Settings</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="dashboard-content">
+        <div class="dashboard-hero">
+            <h1>Your Pipeline Dashboard</h1>
+            <p>Manage and deploy your automation pipelines</p>
+        </div>
+
+        <div class="dashboard-actions">
+            <button class="action-btn" onclick="showBuildPipeline()">
+                <span class="btn-icon">+</span>
+                Build New Pipeline
+            </button>
+        </div>
+
+        <section class="pipelines-section">
+            <h2>Your Pipelines</h2>
+            <div class="pipelines-grid" id="pipelines-grid">
+                {% for pipeline in pipelines %}
+                <div class="pipeline-card" data-pipeline-id="{{ pipeline.id }}">
+                    <div class="pipeline-header">
+                        <h3>{{ pipeline.name }}</h3>
+                        <span class="pipeline-status {{ pipeline.status }}">
+                            {{ pipeline.status.title() }}
+                        </span>
+                    </div>
+                    <p>{{ pipeline.description }}</p>
+                    <div class="pipeline-meta">
+                        <small>Template: {{ pipeline.template }} | Created: {{ pipeline.created_at }}</small>
+                    </div>
+                    <div class="pipeline-actions">
+                        <button class="btn-small" onclick="editPipeline('{{ pipeline.name }}')">Edit</button>
+                        <button class="btn-small deploy-btn" data-pipeline-id="{{ pipeline.id }}" data-pipeline-name="{{ pipeline.name }}">Deploy</button>
+                        <button class="btn-small delete-btn" data-pipeline-id="{{ pipeline.id }}" data-pipeline-name="{{ pipeline.name }}">Delete</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+
+<style>
+/* Dashboard specific fixes */
+.page {
+    min-height: 100vh;
+    overflow-y: auto;
+    position: relative;
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.page::-webkit-scrollbar {
+    display: none; /* WebKit browsers */
+}
+
+.dashboard-header {
+    position: relative;
+    background: rgba(10, 15, 10, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+    padding: 1rem 0;
+    z-index: 100;
+}
+
+.dashboard-content {
+    padding: 2rem 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 2rem;
+}
+
+.dashboard-hero {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-top: 1rem;
+}
+
+body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* Hide scrollbar for body as well */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+body::-webkit-scrollbar {
+    display: none; /* WebKit browsers */
+}
+
+/* Ensure pipeline meta text is visible */
+.pipeline-meta {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.pipeline-meta small {
+    color: rgba(232, 245, 232, 0.7);
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Override pipeline management functions for Flask backend
+function editPipeline(pipelineName) {
+    window.location.href = `/editor/${encodeURIComponent(pipelineName)}`;
+}
+async function deployPipeline(pipelineId, pipelineName) {
+    if (confirm(`Deploy pipeline: ${pipelineName}?`)) {
+        try {
+            const response = await fetch(`/api/pipelines/${pipelineId}/deploy`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                alert(`Deploying ${pipelineName} to Azure DevOps...`);
+                location.reload(); // Refresh to show updated status
+            } else {
+                alert('Failed to deploy pipeline');
+            }
+        } catch (error) {
+            console.error('Error deploying pipeline:', error);
+            alert('Error deploying pipeline');
+        }
+    }
+}
+
+async function deletePipeline(pipelineId, pipelineName) {
+    if (confirm(`Are you sure you want to delete pipeline: ${pipelineName}?`)) {
+        try {
+            const response = await fetch(`/api/pipelines/${pipelineId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                alert(`Pipeline ${pipelineName} deleted.`);
+                location.reload(); // Refresh to remove from UI
+            } else {
+                alert('Failed to delete pipeline');
+            }
+        } catch (error) {
+            console.error('Error deleting pipeline:', error);
+            alert('Error deleting pipeline');
+        }
+    }
+}
+
+// Enhanced create pipeline function
+async function createPipeline() {
+    if (validatePipelineForm()) {
+        const name = document.querySelector('input[placeholder="Enter pipeline name"]').value;
+        const description = document.querySelector('textarea[placeholder="Describe your pipeline"]').value;
+        const template = document.querySelector('.template-card.selected h4')?.textContent || '';
+        
+        try {
+            const response = await fetch('/api/pipelines', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    description: description,
+                    template: template
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`Pipeline "${name}" created successfully!`);
+                closeBuildPipeline();
+                location.reload(); // Refresh to show new pipeline
+            } else {
+                alert('Failed to create pipeline');
+            }
+        } catch (error) {
+            console.error('Error creating pipeline:', error);
+            alert('Error creating pipeline');
+        }
+    }
+}
+
+// Load templates dynamically
+async function loadTemplates() {
+    try {
+        const response = await fetch('/api/templates');
+        const templates = await response.json();
+        
+        const templateGrid = document.querySelector('.template-grid');
+        if (templateGrid) {
+            templateGrid.innerHTML = templates.map(template => `
+                <div class="template-card">
+                    <h4>${template.name}</h4>
+                    <p>${template.description}</p>
+                </div>
+            `).join('');
+            
+            // Re-attach click handlers
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+        }
+    } catch (error) {
+        console.error('Error loading templates:', error);
+    }
+}
+
+// Add event listeners for pipeline buttons
+function attachPipelineEventListeners() {
+    // Deploy buttons
+    document.querySelectorAll('.deploy-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pipelineId = this.dataset.pipelineId;
+            const pipelineName = this.dataset.pipelineName;
+            deployPipeline(pipelineId, pipelineName);
+        });
+    });
+    
+    // Delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pipelineId = this.dataset.pipelineId;
+            const pipelineName = this.dataset.pipelineName;
+            deletePipeline(pipelineId, pipelineName);
+        });
+    });
+}
+
+// Load templates when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadTemplates();
+    attachPipelineEventListeners();
+});
+</script>
+{% endblock %}
