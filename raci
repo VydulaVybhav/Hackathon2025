@@ -1,0 +1,125 @@
+# AWS EKS RACI Matrix
+
+## Legend
+- **R** - Responsible (does the work)
+- **A** - Accountable (ultimately answerable for the correct completion)
+- **C** - Consulted (provides input/advice)
+- **I** - Informed (kept up-to-date on progress)
+
+## Teams
+- **PCE** - Public Cloud Engineering Team
+- **ENS** - Enterprise Network Services Team
+- **EDW** - EKS Data Warehouse Team (your team)
+- **MLOps** - MLOps Team
+- **Shakudo** - Vendor (Shakudo)
+- **Dynatrace** - Dynatrace Team
+- **Aqua** - Aqua Security Team
+
+---
+
+## Infrastructure Layer
+
+| Activity/Decision | PCE | ENS | EDW | MLOps | Shakudo | Dynatrace | Aqua |
+|---|---|---|---|---|---|---|---|
+| **AWS Account Management** | R/A | - | I | I | - | - | - |
+| **IAM Policies & Roles** | R/A | - | C | C | - | - | - |
+| **VPC Configuration** | R/A | - | - | - | - | - | - |
+| **Subnet Management** | R/A | - | C | I | - | - | - |
+| **Security Groups** | R/A | - | C | C | - | - | - |
+| **Network ACLs** | R/A | - | C | I | - | - | - |
+| **Internet/NAT Gateways** | R/A | C | C | I | - | - | - |
+| **Route Tables** | R | - | C | I | - | - | - |
+
+---
+
+## Network & Security Layer
+
+| Activity/Decision | PCE | ENS | EDW | MLOps | Shakudo | Dynatrace | Aqua |
+|---|---|---|---|---|---|---|---|
+| **Firewall Rules** | C | R/A | C | C | - | - | - |
+| **Inbound Traffic Rules** | C | R/A | C | C | - | - | - |
+| **Outbound Traffic Rules** | C | R/A | C | C | - | - | - |
+| **Network Troubleshooting** | C | R/A | C | I | - | - | - |
+| **Load Balancer Configuration** | R | C | R/A | C | - | - | - |
+| **DNS Configuration** | I | R/A | R | C | - | - | - |
+
+---
+
+## EKS Cluster Layer
+
+| Activity/Decision | PCE | ENS | EDW | MLOps | Shakudo | Dynatrace | Aqua |
+|---|---|---|---|---|---|---|---|
+| **EKS Cluster Creation** | C | I | R/A | C | - | - | - |
+| **EKS Version Upgrades** | C | I | R/A | C | I | I | I |
+| **Control Plane Configuration** | C | I | R/A | C | - | - | - |
+| **Node Group Management** | C | I | R/A | C | - | - | - |
+| **Worker Node Configuration** | C | I | R/A | C | - | - | - |
+| **Cluster Autoscaling** | C | I | R/A | C | - | - | - |
+| **EKS Add-ons Management** | C | I | R/A | C | - | - | - |
+| **Kubernetes RBAC** | C | I | R/A | R | - | - | - |
+| **Service Accounts** | C | I | R/A | R | - | - | - |
+
+---
+
+## Application Platform Layer
+
+| Activity/Decision | PCE | ENS | EDW | MLOps | Shakudo | Dynatrace | Aqua |
+|---|---|---|---|---|---|---|---|
+| **Shakudo Platform Installation** | I | I | C | R/A | R | - | - |
+| **Shakudo Configuration** | I | I | C | R/A | R | - | - |
+| **Shakudo Updates/Patches** | I | I | C | R/A | R | - | - |
+| **Application Deployments** | I | I | C | R/A | C | - | - |
+| **Container Image Management** | I | I | C | R/A | C | - | - |
+| **Namespace Management** | I | I | C | R/A | - | - | - |
+| **Resource Quotas/Limits** | I | I | C | R/A | - | - | - |
+| **Persistent Volume Claims** | I | I | C | R/A | - | - | - |
+
+---
+
+## Monitoring & Observability
+
+| Activity/Decision | PCE | ENS | EDW | MLOps | Shakudo | Dynatrace | Aqua |
+|---|---|---|---|---|---|---|---|
+| **Dynatrace Agent Deployment** | I | I | C | C | I | R/A | - |
+| **Dynatrace Configuration** | I | I | C | C | I | R/A | - |
+| **Application Performance Monitoring** | I | I | I | C | I | R/A | - |
+| **Infrastructure Monitoring** | I | I | C | C | I | R/A | - |
+| **Aqua Security Deployment** | I | I | C | C | I | - | R/A |
+| **Container Security Scanning** | I | I | C | C | I | - | R/A |
+| **Security Policy Enforcement** | I | I | C | C | I | - | R/A |
+| **Vulnerability Management** | I | I | C | C | I | - | R/A |
+
+---
+
+## Incident Management
+
+| Activity/Decision | PCE | ENS | EDW | MLOps | Shakudo | Dynatrace | Aqua |
+|---|---|---|---|---|---|---|---|
+| **AWS Infrastructure Issues** | R/A | C | C | I | - | I | I |
+| **Network Connectivity Issues** | C | R/A | C | I | - | I | I |
+| **EKS Cluster Issues** | C | C | R/A | C | - | I | I |
+| **Application Issues** | I | I | C | R/A | R | C | I |
+| **Shakudo Platform Issues** | I | I | C | C | R/A | I | I |
+| **Security Incidents** | C | C | C | C | I | I | R/A |
+| **Performance Issues** | I | C | C | C | C | R/A | I |
+
+---
+
+## Change Management
+
+| Activity/Decision | PCE | ENS | EDW | MLOps | Shakudo | Dynatrace | Aqua |
+|---|---|---|---|---|---|---|---|
+| **Infrastructure Changes** | R/A | C | C | I | - | I | I |
+| **Network Changes** | C | R/A | C | I | - | I | I |
+| **EKS Configuration Changes** | C | C | R/A | C | I | I | I |
+| **Application Changes** | I | I | C | R/A | C | I | I |
+| **Security Policy Changes** | C | C | R/A | R/A | I | I | R/A |
+| **Monitoring Configuration Changes** | I | I | C | C | I | R/A | C |
+
+---
+
+## Notes
+- This matrix should be reviewed and updated regularly as responsibilities evolve
+- Multiple teams may share R (Responsible) for complex activities requiring collaboration
+- Vendor involvement (Shakudo) may vary based on support contract terms
+- Consider creating separate matrices for different environments (dev, staging, prod) if responsibilities differ
