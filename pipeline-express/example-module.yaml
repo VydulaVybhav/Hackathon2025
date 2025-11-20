@@ -1,0 +1,41 @@
+# Example System Module Definition for Azure DevOps
+# Place files like this in your ADO repository under the configured modules path
+
+# Required fields
+type: action  # 'trigger' or 'action'
+label: API Call  # Display name shown in the UI
+description: Make HTTP request to external API  # Short description
+
+# Icon from lucide-react (see ADO_MODULES_GUIDE.md for available icons)
+icon: zap
+
+# Parameters that users can configure when using this module
+# These will appear as editable fields in the Module Config panel
+parameters:
+  - name: endpoint
+    type: string
+    default: https://api.example.com/data
+    description: API endpoint URL
+
+  - name: method
+    type: string
+    default: GET
+    description: HTTP method (GET, POST, PUT, DELETE)
+
+  - name: headers
+    type: object
+    default: '{"Content-Type": "application/json"}'
+    description: Request headers as JSON
+
+  - name: timeout
+    type: number
+    default: 30
+    description: Request timeout in seconds
+
+  - name: retries
+    type: number
+    default: 3
+    description: Number of retry attempts
+
+# You can add any number of parameters
+# Each parameter will become a configuration field in the workflow builder

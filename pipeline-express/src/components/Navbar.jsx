@@ -12,6 +12,7 @@ const Navbar = () => {
                 <div className="logo">Pipeline Express</div>
                 <ul className="nav-links">
                     <li><Link to="/">Home</Link></li>
+                    <li><Link to="/saved-workflows">Workflows</Link></li>
                     <li><Link to="/builder">Builder</Link></li>
                     <li>
                         <button onClick={toggleTheme} className="theme-toggle" aria-label="Toggle Theme" title={`Current theme: ${theme}`}>
