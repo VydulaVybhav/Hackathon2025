@@ -65,8 +65,8 @@ This will create:
 2. Copy the contents from `.env.example`:
 
 ```env
-REACT_APP_SUPABASE_URL=your_project_url_here
-REACT_APP_SUPABASE_ANON_KEY=your_anon_key_here
+HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_SUPABASE_URL=your_project_url_here
+HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_SUPABASE_ANON_KEY=your_anon_key_here
 ```
 
 3. Replace the values with your actual credentials from Step 3
@@ -142,7 +142,7 @@ To verify in Supabase:
 
 **Test in console:**
 ```javascript
-console.log(process.env.REACT_APP_SUPABASE_URL);
+console.log(process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_SUPABASE_URL);
 // Should print your Supabase URL, not undefined
 ```
 

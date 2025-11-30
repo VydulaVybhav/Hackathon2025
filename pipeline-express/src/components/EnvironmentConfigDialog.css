@@ -1,0 +1,369 @@
+/* Environment Config Dialog - Full-screen modal for managing environment defaults */
+
+.env-config-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease;
+}
+
+.env-config-dialog {
+  background: var(--bg-dark);
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 1000px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0, 255, 159, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header */
+.env-config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--header-bg);
+}
+
+.env-config-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.env-config-title h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+}
+
+.env-config-close {
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.env-config-close:hover {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff0080;
+}
+
+/* Content */
+.env-config-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.env-config-section {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.env-config-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+}
+
+.env-config-description {
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Environment List */
+.env-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.env-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.env-item.active {
+  border-color: var(--primary-color);
+  background: rgba(0, 255, 159, 0.05);
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+}
+
+.env-item-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.env-badge {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.env-current-badge {
+  margin-left: auto;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  background: var(--primary-color);
+  color: #000;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.env-item-delete {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.env-item-delete:hover {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff0080;
+}
+
+/* Add Environment Form */
+.env-add-form {
+  display: flex;
+  gap: 8px;
+}
+
+.env-add-input {
+  flex: 1;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.env-add-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+}
+
+.env-add-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--primary-color);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.env-add-button:hover:not(:disabled) {
+  background: var(--secondary-color);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.4);
+}
+
+.env-add-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Template Configs */
+.env-config-templates {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.env-config-template {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.env-config-template h4 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  color: var(--primary-color);
+}
+
+.env-config-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.env-config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.env-config-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.env-config-input {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.env-config-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 8px rgba(0, 255, 159, 0.2);
+}
+
+.env-config-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.env-config-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Footer */
+.env-config-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-color);
+  background: var(--header-bg);
+}
+
+.env-config-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.env-config-button.primary {
+  background: var(--primary-color);
+  color: #000;
+}
+
+.env-config-button.primary:hover:not(:disabled) {
+  background: var(--secondary-color);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.4);
+}
+
+.env-config-button.secondary {
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.env-config-button.secondary:hover {
+  border-color: var(--primary-color);
+  background: rgba(0, 255, 159, 0.1);
+}
+
+.env-config-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .env-config-dialog {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .env-config-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .env-config-footer {
+    flex-direction: column;
+  }
+
+  .env-add-form {
+    flex-direction: column;
+  }
+}

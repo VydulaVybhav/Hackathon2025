@@ -1,3 +1,6 @@
+/* Import Utilities */
+@import './styles/utilities.css';
+
 /* Theme Variables */
 :root {
   --bg-gradient: linear-gradient(135deg, #0a0f0a 0%, #1a2e1a 100%);
@@ -36,6 +39,18 @@
   box-sizing: border-box;
 }
 
+/* Hide scrollbar for all browsers */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: var(--bg-gradient);
@@ -48,6 +63,18 @@ body {
 #root,
 .App {
   min-height: 100vh;
+}
+
+/* Hide scrollbar for root and App */
+#root::-webkit-scrollbar,
+.App::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 /* Header */
@@ -136,15 +163,6 @@ nav {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes glow {
-  from {
-    filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.2));
-  }
-  to {
-    filter: drop-shadow(0 0 20px rgba(0, 255, 65, 0.3));
-  }
 }
 
 .hero p {

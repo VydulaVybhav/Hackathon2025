@@ -5,6 +5,16 @@
   margin: 0 auto;
 }
 
+/* Hide scrollbar for saved workflows container */
+.saved-workflows-container::-webkit-scrollbar {
+  display: none;
+}
+
+.saved-workflows-container {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 .saved-workflows-header {
   text-align: center;
   margin-bottom: 40px;

@@ -228,3 +228,44 @@ Stores individual node configurations within workflows.
 - Timestamps are stored in UTC
 - JSON fields allow flexible storage of workflow data
 - The custom schema keeps everything organized under `pipeline-express`
+
+
+## NEW
+
+-- Drop existing policies
+DROP POLICY IF EXISTS "Enable read access for all users" ON "pipeline-express".workflows;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON "pipeline-express".workflows;
+DROP POLICY IF EXISTS "Enable update for users based on user_id" ON "pipeline-express".workflows;
+DROP POLICY IF EXISTS "Enable delete for users based on user_id" ON "pipeline-express".workflows;
+
+-- Create new permissive policies for anonymous access
+CREATE POLICY "Allow all to read public workflows" ON "pipeline-express".workflows
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow anyone to insert workflows" ON "pipeline-express".workflows
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow anyone to update workflows they created or public ones" ON "pipeline-express".workflows
+  FOR UPDATE USING (true);
+
+CREATE POLICY "Allow anyone to delete workflows" ON "pipeline-express".workflows
+  FOR DELETE USING (true);
+  
+
+  -- system_modules
+DROP POLICY IF EXISTS "Enable read access for all users" ON "pipeline-express".system_modules;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON "pipeline-express".system_modules;
+DROP POLICY IF EXISTS "Enable update for users based on user_id" ON "pipeline-express".system_modules;
+DROP POLICY IF EXISTS "Enable delete for users based on user_id" ON "pipeline-express".system_modules;
+
+CREATE POLICY "Allow all operations on system_modules" ON "pipeline-express".system_modules
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- workflow_configs
+DROP POLICY IF EXISTS "Enable read access for workflow owners" ON "pipeline-express".workflow_configs;
+DROP POLICY IF EXISTS "Enable insert for workflow owners" ON "pipeline-express".workflow_configs;
+DROP POLICY IF EXISTS "Enable update for workflow owners" ON "pipeline-express".workflow_configs;
+DROP POLICY IF EXISTS "Enable delete for workflow owners" ON "pipeline-express".workflow_configs;
+
+CREATE POLICY "Allow all operations on workflow_configs" ON "pipeline-express".workflow_configs
+  FOR ALL USING (true) WITH CHECK (true);

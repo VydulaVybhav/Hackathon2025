@@ -1,0 +1,221 @@
+{
+  "name": "Pipeline Express Workflow Executor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "execute-workflow",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "execute-workflow"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "execution_id",
+              "value": "={{ $json.body.execution_id }}"
+            },
+            {
+              "name": "workflow_id",
+              "value": "={{ $json.body.workflow_id }}"
+            }
+          ],
+          "array": [
+            {
+              "name": "nodes",
+              "value": "={{ $json.body.nodes }}"
+            },
+            {
+              "name": "edges",
+              "value": "={{ $json.body.edges }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-workflow-data",
+      "name": "Extract Workflow Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE \"pipeline-express\".workflow_executions SET status = 'running' WHERE id = '{{ $json.execution_id }}';",
+        "options": {}
+      },
+      "id": "mark-execution-running",
+      "name": "Mark Execution Running",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_SUPABASE_CREDENTIALS_ID",
+          "name": "Supabase PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize node execution records\nconst nodes = $input.item.json.nodes;\nconst execution_id = $input.item.json.execution_id;\n\nconst nodeExecutions = nodes.map(node => ({\n  execution_id: execution_id,\n  node_id: node.id,\n  node_type: node.data.type,\n  status: 'pending'\n}));\n\nreturn nodeExecutions.map(item => ({ json: item }));"
+      },
+      "id": "prepare-node-executions",
+      "name": "Prepare Node Executions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "\"pipeline-express\".node_executions",
+        "columns": "execution_id, node_id, node_type, status",
+        "options": {}
+      },
+      "id": "create-node-execution-records",
+      "name": "Create Node Execution Records",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1120, 300],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_SUPABASE_CREDENTIALS_ID",
+          "name": "Supabase PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Execute each node sequentially\nconst nodes = $input.first().json.nodes;\nconst execution_id = $input.first().json.execution_id;\nconst results = [];\n\nfor (const node of nodes) {\n  try {\n    // Update node status to 'running'\n    await $http.request({\n      method: 'POST',\n      url: $env.SUPABASE_URL + '/rest/v1/node_executions',\n      headers: {\n        'apikey': $env.SUPABASE_ANON_KEY,\n        'Authorization': 'Bearer ' + $env.SUPABASE_ANON_KEY,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: {\n        execution_id: execution_id,\n        node_id: node.id,\n        status: 'running',\n        started_at: new Date().toISOString()\n      }\n    });\n\n    // Simulate node execution (replace with actual node logic)\n    await new Promise(resolve => setTimeout(resolve, 1000));\n\n    // Update node status to 'success'\n    await $http.request({\n      method: 'PATCH',\n      url: $env.SUPABASE_URL + '/rest/v1/node_executions?execution_id=eq.' + execution_id + '&node_id=eq.' + node.id,\n      headers: {\n        'apikey': $env.SUPABASE_ANON_KEY,\n        'Authorization': 'Bearer ' + $env.SUPABASE_ANON_KEY,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: {\n        status: 'success',\n        completed_at: new Date().toISOString(),\n        output_data: { message: 'Node executed successfully' }\n      }\n    });\n\n    results.push({ node_id: node.id, status: 'success' });\n  } catch (error) {\n    // Update node status to 'error'\n    await $http.request({\n      method: 'PATCH',\n      url: $env.SUPABASE_URL + '/rest/v1/node_executions?execution_id=eq.' + execution_id + '&node_id=eq.' + node.id,\n      headers: {\n        'apikey': $env.SUPABASE_ANON_KEY,\n        'Authorization': 'Bearer ' + $env.SUPABASE_ANON_KEY,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: {\n        status: 'error',\n        completed_at: new Date().toISOString(),\n        error_message: error.message\n      }\n    });\n\n    results.push({ node_id: node.id, status: 'error', error: error.message });\n  }\n}\n\nreturn [{ json: { execution_id, results } }];"
+      },
+      "id": "execute-nodes",
+      "name": "Execute Nodes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE \"pipeline-express\".workflow_executions SET status = 'completed', completed_at = NOW() WHERE id = '{{ $json.execution_id }}';",
+        "options": {}
+      },
+      "id": "mark-execution-complete",
+      "name": "Mark Execution Complete",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1560, 300],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_SUPABASE_CREDENTIALS_ID",
+          "name": "Supabase PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, execution_id: $json.execution_id, message: 'Workflow execution started' } }}"
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1780, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Workflow Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Workflow Data": {
+      "main": [
+        [
+          {
+            "node": "Mark Execution Running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Execution Running": {
+      "main": [
+        [
+          {
+            "node": "Prepare Node Executions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Node Executions": {
+      "main": [
+        [
+          {
+            "node": "Create Node Execution Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Node Execution Records": {
+      "main": [
+        [
+          {
+            "node": "Execute Nodes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Nodes": {
+      "main": [
+        [
+          {
+            "node": "Mark Execution Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Execution Complete": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-30T00:00:00.000Z",
+  "versionId": "1"
+}

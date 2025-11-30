@@ -2,15 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import SupabaseWarning from '../components/SupabaseWarning';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { useWorkflowStorage } from '../hooks/useWorkflowStorage';
+import { useToast } from '../context/ToastContext';
 import { Trash2, Play, Edit, Calendar, GitBranch } from 'lucide-react';
+import {
+  SUCCESS_MESSAGES,
+  ERROR_MESSAGES,
+  CONFIRM_MESSAGES,
+  CONFIRM_DIALOG
+} from '../constants/appConstants';
 import './SavedWorkflows.css';
 
 const SavedWorkflows = () => {
   const [workflows, setWorkflows] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    workflowId: null,
+    workflowName: '',
+  });
   const navigate = useNavigate();
   const { loadAllWorkflows, deleteWorkflow, isLoading } = useWorkflowStorage();
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     fetchWorkflows();
@@ -20,16 +34,37 @@ const SavedWorkflows = () => {
     const result = await loadAllWorkflows();
     if (result.success) {
       setWorkflows(result.data || []);
+    } else {
+      showError(ERROR_MESSAGES.WORKFLOW_LOAD_ALL_FAILED);
+      console.error('Error loading workflows:', result.error);
     }
   };
 
   const handleDelete = async (id, name) => {
-    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
-      const result = await deleteWorkflow(id);
-      if (result.success) {
-        setWorkflows(workflows.filter((w) => w.id !== id));
-      }
+    setConfirmDialog({
+      isOpen: true,
+      workflowId: id,
+      workflowName: name,
+    });
+  };
+
+  const confirmDelete = async () => {
+    const { workflowId, workflowName } = confirmDialog;
+
+    const result = await deleteWorkflow(workflowId);
+    if (result.success) {
+      setWorkflows(workflows.filter((w) => w.id !== workflowId));
+      showSuccess(SUCCESS_MESSAGES.WORKFLOW_DELETED);
+    } else {
+      showError(ERROR_MESSAGES.WORKFLOW_DELETE_FAILED);
+      console.error('Error deleting workflow:', result.error);
     }
+
+    setConfirmDialog({ isOpen: false, workflowId: null, workflowName: '' });
+  };
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog({ isOpen: false, workflowId: null, workflowName: '' });
   };
 
   const handleEdit = (id) => {
@@ -150,6 +185,17 @@ const SavedWorkflows = () => {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={closeConfirmDialog}
+        onConfirm={confirmDelete}
+        title={CONFIRM_DIALOG.DELETE_TITLE}
+        message={CONFIRM_MESSAGES.DELETE_WORKFLOW(confirmDialog.workflowName)}
+        confirmText={CONFIRM_DIALOG.DELETE_CONFIRM_TEXT}
+        cancelText={CONFIRM_DIALOG.CANCEL_TEXT}
+        variant="danger"
+      />
     </div>
   );
 };

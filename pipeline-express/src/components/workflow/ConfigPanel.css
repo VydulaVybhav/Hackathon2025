@@ -1,0 +1,172 @@
+/* ConfigPanel Styles - Environment-Aware Configuration */
+
+.wb-config-module-info {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wb-config-readonly {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.wb-config-readonly.small {
+  font-size: 0.85rem;
+  font-weight: 400;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* View Mode Toggle */
+.wb-config-mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.wb-mode-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wb-mode-btn:hover {
+  background: rgba(0, 255, 159, 0.1);
+  color: var(--primary-color);
+}
+
+.wb-mode-btn.active {
+  background: var(--primary-color);
+  color: var(--bg-dark);
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+}
+
+/* Environment Header */
+.wb-config-env-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-left: 3px solid var(--primary-color);
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.wb-config-env-header strong {
+  color: var(--primary-color);
+}
+
+.wb-config-note {
+  padding: 8px 12px;
+  background: rgba(255, 193, 7, 0.1);
+  border-left: 3px solid #ffc107;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 0.8rem;
+  color: var(--text-color);
+  font-style: italic;
+}
+
+/* Config Fields */
+.wb-config-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wb-config-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.wb-config-description {
+  margin-left: 6px;
+  font-size: 0.85rem;
+  cursor: help;
+  opacity: 0.7;
+}
+
+.wb-config-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* All Environments View */
+.wb-config-all-envs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.wb-config-env-section {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.wb-config-env-section .wb-config-env-header {
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+}
+
+.wb-config-field.compact {
+  margin-bottom: 10px;
+}
+
+.wb-config-field.compact .wb-config-label {
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.wb-config-field.compact .wb-config-input {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .wb-config-all-envs {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .wb-config-mode-toggle {
+    flex-direction: column;
+  }
+
+  .wb-mode-btn {
+    width: 100%;
+  }
+}

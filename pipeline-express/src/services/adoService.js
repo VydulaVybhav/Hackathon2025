@@ -1,4 +1,5 @@
 import yaml from 'js-yaml';
+import { ADO_CONFIG } from '../constants/appConstants';
 
 /**
  * Azure DevOps Service for fetching module definitions
@@ -14,12 +15,12 @@ import yaml from 'js-yaml';
 
 class ADOService {
   constructor() {
-    this.organization = process.env.REACT_APP_ADO_ORG;
-    this.project = process.env.REACT_APP_ADO_PROJECT;
-    this.repository = process.env.REACT_APP_ADO_REPO;
-    this.pat = process.env.REACT_APP_ADO_PAT;
-    this.modulesPath = process.env.REACT_APP_ADO_MODULES_PATH || 'modules';
-    this.branch = process.env.REACT_APP_ADO_BRANCH || 'main';
+    this.organization = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_ORG;
+    this.project = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_PROJECT;
+    this.repository = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_REPO;
+    this.pat = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_PAT;
+    this.modulesPath = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_MODULES_PATH || ADO_CONFIG.DEFAULT_MODULES_PATH;
+    this.branch = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_BRANCH || ADO_CONFIG.DEFAULT_BRANCH;
 
     this.baseUrl = `https://dev.azure.com/${this.organization}/${this.project}/_apis`;
   }
@@ -55,7 +56,7 @@ class ADOService {
         `scopePath=/${this.modulesPath}&` +
         `recursionLevel=OneLevel&` +
         `versionDescriptor.version=${this.branch}&` +
-        `api-version=7.0`;
+        `api-version=${ADO_CONFIG.API_VERSION}`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -88,7 +89,7 @@ class ADOService {
       const url = `${this.baseUrl}/git/repositories/${this.repository}/items?` +
         `path=${filePath}&` +
         `versionDescriptor.version=${this.branch}&` +
-        `api-version=7.0`;
+        `api-version=${ADO_CONFIG.API_VERSION}`;
 
       const response = await fetch(url, {
         method: 'GET',

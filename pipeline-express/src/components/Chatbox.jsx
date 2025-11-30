@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, MessageSquare, Minimize2, Maximize2, Sparkles } from 'lucide-react';
+import { TIMING } from '../constants/appConstants';
 import './Chatbox.css';
 
 const Chatbox = () => {
@@ -28,12 +29,12 @@ const Chatbox = () => {
     
     // Simulate response
     setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        id: Date.now() + 1, 
-        text: "I've received your request. As a prototype, I can't execute actions yet, but I'm ready to be connected to the backend!", 
-        sender: 'system' 
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        text: "I've received your request. As a prototype, I can't execute actions yet, but I'm ready to be connected to the backend!",
+        sender: 'system'
       }]);
-    }, 1000);
+    }, TIMING.AI_RESPONSE_DELAY);
   };
 
   return (

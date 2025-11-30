@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useEnvironment } from '../context/EnvironmentContext';
 import {
   ReactFlow,
   Background,
@@ -11,13 +12,19 @@ import {
   ConnectionMode,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Play, Settings, Trash2, Plus, Home as HomeIcon, Palette, Save, FolderOpen } from 'lucide-react';
+import { Play, Home as HomeIcon, Palette, FolderOpen, Settings } from 'lucide-react';
 import CustomNode from './workflow/CustomNode';
+import SaveWorkflowDialog from './workflow/SaveWorkflowDialog';
+import ModulePanel from './workflow/ModulePanel';
+import ConfigPanel from './workflow/ConfigPanel';
+import EnvironmentConfigDialog from './EnvironmentConfigDialog';
 import SupabaseWarning from './SupabaseWarning';
 import { useWorkflow } from '../hooks/useWorkflow';
 import { useWorkflowStorage } from '../hooks/useWorkflowStorage';
 import { useModuleLoader } from '../hooks/useModuleLoader';
+import { useToast } from '../context/ToastContext';
 import { getStatusColor } from '../utils/workflowUtils';
+import { STATUS_TEXT, BUTTON_TEXT, ERROR_MESSAGES, WORKFLOW_DEFAULTS, SUCCESS_MESSAGES } from '../constants/appConstants';
 import './WorkflowBuilder.css';
 import Chatbox from './Chatbox';
 
@@ -31,7 +38,10 @@ const WorkflowBuilder = () => {
   const [currentWorkflowId, setCurrentWorkflowId] = useState(id || null);
   const [workflowName, setWorkflowName] = useState('Untitled Workflow');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showEnvConfigDialog, setShowEnvConfigDialog] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { currentEnv } = useEnvironment();
+  const { showSuccess, showError } = useToast();
   const { modules, isLoading: isLoadingModules, error: moduleError, source: moduleSource } = useModuleLoader();
   const {
     nodes,
@@ -45,6 +55,7 @@ const WorkflowBuilder = () => {
     onNodeClick,
     deleteNode,
     updateNodeConfig,
+    switchEnvironment,
     executeWorkflow,
     setNodes,
     setEdges,
@@ -57,6 +68,11 @@ const WorkflowBuilder = () => {
       handleLoadWorkflow(id);
     }
   }, [id]);
+
+  // Switch environment when currentEnv changes
+  useEffect(() => {
+    switchEnvironment(currentEnv);
+  }, [currentEnv, switchEnvironment]);
 
   const handleLoadWorkflow = async (workflowId) => {
     const result = await loadWorkflow(workflowId);
@@ -72,7 +88,7 @@ const WorkflowBuilder = () => {
     const workflow = {
       id: currentWorkflowId,
       name: workflowName,
-      description: `Workflow with ${nodes.length} nodes`,
+      description: WORKFLOW_DEFAULTS.DESCRIPTION_TEMPLATE(nodes.length),
       nodes,
       edges,
     };
@@ -80,17 +96,17 @@ const WorkflowBuilder = () => {
     if (currentWorkflowId) {
       const result = await updateWorkflow(currentWorkflowId, workflow);
       if (result.success) {
-        alert('Workflow updated successfully!');
+        showSuccess(SUCCESS_MESSAGES.WORKFLOW_UPDATED);
       } else {
-        alert(`Error: ${result.error || 'Failed to update workflow'}`);
+        showError(`Error: ${result.error || ERROR_MESSAGES.WORKFLOW_UPDATE_FAILED}`);
       }
     } else {
       const result = await saveWorkflow(workflow);
       if (result.success && result.data) {
         setCurrentWorkflowId(result.data.id);
-        alert('Workflow saved successfully!');
+        showSuccess(SUCCESS_MESSAGES.WORKFLOW_SAVED);
       } else {
-        alert(`Error: ${result.error || 'Failed to save workflow'}`);
+        showError(`Error: ${result.error || ERROR_MESSAGES.WORKFLOW_SAVE_FAILED}`);
       }
     }
     setShowSaveDialog(false);
@@ -118,7 +134,7 @@ const WorkflowBuilder = () => {
               style={{ padding: '8px 12px', fontSize: '12px', textDecoration: 'none' }}
             >
               <HomeIcon size={14} />
-              <span>Home</span>
+              <span>{BUTTON_TEXT.HOME}</span>
             </Link>
             <button
               onClick={toggleTheme}
@@ -127,132 +143,28 @@ const WorkflowBuilder = () => {
               title={`Current theme: ${theme}`}
             >
               <Palette size={14} />
-              <span>Theme</span>
+              <span>{BUTTON_TEXT.THEME}</span>
             </button>
           </div>
           <h1 className="wb-sidebar-title">Neural Flow</h1>
           <p className="wb-sidebar-subtitle">Build your digital pipeline</p>
         </div>
 
-        <div className="wb-templates-container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h2 className="wb-templates-title">System Modules</h2>
-            {moduleSource && (
-              <span style={{ fontSize: '10px', color: 'var(--primary-color)', textTransform: 'uppercase', fontWeight: 'bold' }}>
-                {isLoadingModules ? 'Loading...' : 'ADO'}
-              </span>
-            )}
-          </div>
+        <ModulePanel
+          modules={modules}
+          moduleSource={moduleSource}
+          moduleError={moduleError}
+          isLoadingModules={isLoadingModules}
+          hoveredTemplate={hoveredTemplate}
+          setHoveredTemplate={setHoveredTemplate}
+          onAddNode={addNode}
+        />
 
-          {moduleError && (
-            <div style={{
-              padding: '16px',
-              marginBottom: '15px',
-              background: 'rgba(255, 59, 48, 0.15)',
-              border: '2px solid rgba(255, 59, 48, 0.5)',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: '#ff453a'
-            }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '13px' }}>
-                ⚠️ ADO Connection Failed
-              </div>
-              <div style={{ marginBottom: '8px', lineHeight: '1.4' }}>
-                {moduleError}
-              </div>
-              <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '8px' }}>
-                Configure Azure DevOps environment variables to load modules.
-                <br />See ADO_MODULES_GUIDE.md for setup instructions.
-              </div>
-            </div>
-          )}
-
-          {!moduleError && modules.length === 0 && !isLoadingModules && (
-            <div style={{
-              padding: '16px',
-              marginBottom: '15px',
-              background: 'rgba(255, 149, 0, 0.15)',
-              border: '2px solid rgba(255, 149, 0, 0.5)',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: '#ff9f0a'
-            }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-                📦 No Modules Found
-              </div>
-              <div style={{ lineHeight: '1.4' }}>
-                No module YAML files found in ADO repository.
-                <br />Add YAML files to the configured modules path.
-              </div>
-            </div>
-          )}
-
-          <div className="wb-templates-list">
-            {modules.map((template, index) => {
-              const Icon = template.icon;
-              const isHovered = hoveredTemplate === index;
-              return (
-                <button
-                  key={index}
-                  onClick={() => addNode(template)}
-                  onMouseEnter={() => setHoveredTemplate(index)}
-                  onMouseLeave={() => setHoveredTemplate(null)}
-                  className="wb-node-template"
-                  disabled={isLoadingModules}
-                >
-                  <Icon size={20} style={{ color: 'var(--primary-color)' }} />
-                  <div className="wb-node-template-content">
-                    <div className="wb-node-template-label">{template.label}</div>
-                    <div className="wb-node-template-description">{template.description}</div>
-                  </div>
-                  <Plus
-                    size={16}
-                    style={{ color: 'var(--primary-color)', opacity: isHovered ? 1 : 0.7 }}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {selectedNode && (
-          <div className="wb-config-panel">
-            <div className="wb-config-header">
-              <h3 className="wb-config-title">Module Config</h3>
-              <button onClick={deleteNode} className="wb-delete-button">
-                <Trash2 size={16} />
-              </button>
-            </div>
-
-            <div className="wb-config-fields">
-              <div className="wb-config-field">
-                <label className="wb-config-label">Module Type</label>
-                <div
-                  className="wb-config-input"
-                  style={{
-                    backgroundColor: 'var(--input-bg)',
-                    border: '1px solid var(--border-color)',
-                  }}
-                >
-                  {selectedNode.data.label}
-                </div>
-              </div>
-
-              {selectedNode.data.config &&
-                Object.entries(selectedNode.data.config).map(([key, value]) => (
-                  <div key={key} className="wb-config-field">
-                    <label className="wb-config-label">{key}</label>
-                    <input
-                      type="text"
-                      value={value}
-                      onChange={(e) => updateNodeConfig(selectedNode.id, { [key]: e.target.value })}
-                      className="wb-config-input"
-                    />
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
+        <ConfigPanel
+          selectedNode={selectedNode}
+          onDelete={deleteNode}
+          onUpdateConfig={updateNodeConfig}
+        />
       </div>
 
       <div className="wb-canvas">
@@ -286,13 +198,27 @@ const WorkflowBuilder = () => {
           <Panel position="top-right">
             <div className="wb-button-group">
               <button
+                onClick={() => setShowEnvConfigDialog(true)}
+                className="wb-button wb-env-config-button"
+                title="Configure environment defaults"
+                style={{
+                  background: 'var(--primary-color)',
+                  color: '#000',
+                  fontWeight: 600,
+                }}
+              >
+                <Settings size={16} />
+                <span>{currentEnv.toUpperCase()}</span>
+              </button>
+
+              <button
                 onClick={() => setShowSaveDialog(true)}
                 disabled={isSaving || nodes.length === 0}
                 className="wb-button wb-settings-button"
-                title="Save Workflow"
+                title={BUTTON_TEXT.SAVE_WORKFLOW}
               >
-                <Save size={16} />
-                <span>{isSaving ? 'Saving...' : currentWorkflowId ? 'Update' : 'Save'}</span>
+                <FolderOpen size={16} />
+                <span>{isSaving ? BUTTON_TEXT.SAVING : currentWorkflowId ? BUTTON_TEXT.UPDATE : BUTTON_TEXT.SAVE}</span>
               </button>
 
               <Link to="/saved-workflows" className="wb-button wb-settings-button" style={{ textDecoration: 'none' }}>
@@ -307,7 +233,7 @@ const WorkflowBuilder = () => {
                   }`}
               >
                 <Play size={16} />
-                <span>{isRunning ? 'Executing...' : 'Execute Flow'}</span>
+                <span>{isRunning ? STATUS_TEXT.EXECUTING : STATUS_TEXT.EXECUTE}</span>
               </button>
             </div>
           </Panel>
@@ -330,7 +256,7 @@ const WorkflowBuilder = () => {
                     color: isRunning ? '#ffaa00' : 'var(--primary-color)',
                   }}
                 >
-                  {isRunning ? 'Active' : 'Ready'}
+                  {isRunning ? STATUS_TEXT.RUNNING : STATUS_TEXT.IDLE}
                 </div>
               </div>
             </div>
@@ -340,45 +266,23 @@ const WorkflowBuilder = () => {
       </div>
 
       {/* Save Dialog */}
-      {showSaveDialog && (
-        <div className="wb-modal-overlay" onClick={() => setShowSaveDialog(false)}>
-          <div className="wb-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="wb-modal-title">Save Workflow</h2>
-            <div className="wb-modal-content">
-              <div className="wb-config-field">
-                <label className="wb-config-label">Workflow Name</label>
-                <input
-                  type="text"
-                  value={workflowName}
-                  onChange={(e) => setWorkflowName(e.target.value)}
-                  className="wb-config-input"
-                  placeholder="Enter workflow name..."
-                  autoFocus
-                />
-              </div>
-              <div className="wb-modal-info">
-                <p>Nodes: {nodes.length} | Connections: {edges.length}</p>
-              </div>
-            </div>
-            <div className="wb-modal-actions">
-              <button
-                onClick={() => setShowSaveDialog(false)}
-                className="wb-button wb-settings-button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveWorkflow}
-                disabled={!workflowName.trim() || isSaving}
-                className="wb-button wb-execute-button"
-              >
-                <Save size={16} />
-                <span>{isSaving ? 'Saving...' : 'Save'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SaveWorkflowDialog
+        isOpen={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        onSave={handleSaveWorkflow}
+        workflowName={workflowName}
+        setWorkflowName={setWorkflowName}
+        nodeCount={nodes.length}
+        edgeCount={edges.length}
+        isSaving={isSaving}
+      />
+
+      {/* Environment Config Dialog */}
+      <EnvironmentConfigDialog
+        isOpen={showEnvConfigDialog}
+        onClose={() => setShowEnvConfigDialog(false)}
+        nodes={nodes}
+      />
     </div>
   );
 };
