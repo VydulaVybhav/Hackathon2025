@@ -1,0 +1,218 @@
+/* Commit Dialog Overlay */
+.commit-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Dialog Container */
+.commit-dialog {
+  width: 90%;
+  max-width: 500px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 255, 65, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Header */
+.commit-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(26, 46, 26, 0.4);
+}
+
+.commit-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-color);
+}
+
+.commit-dialog-title svg {
+  color: var(--primary-color);
+}
+
+.commit-dialog-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.commit-dialog-close {
+  padding: 6px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.commit-dialog-close:hover {
+  background: #ff4444;
+  border-color: #ff4444;
+  color: white;
+}
+
+/* Form */
+.commit-dialog-form {
+  padding: 20px;
+}
+
+.commit-dialog-file {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid var(--primary-color);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-color);
+}
+
+.commit-dialog-file strong {
+  color: var(--primary-color);
+  margin-right: 8px;
+}
+
+.commit-dialog-field {
+  margin-bottom: 20px;
+}
+
+.commit-dialog-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.commit-message-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-color);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.commit-message-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--shadow-color);
+}
+
+.commit-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+/* Actions */
+.commit-dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.commit-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+}
+
+.commit-btn-cancel {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.commit-btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary-color);
+}
+
+.commit-btn-primary {
+  background: var(--primary-color);
+  color: var(--bg-color);
+  border: 1px solid var(--primary-color);
+}
+
+.commit-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 20px var(--shadow-color);
+  transform: translateY(-2px);
+}
+
+.commit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Light Theme */
+body.light-theme .commit-dialog {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 20px 60px rgba(0, 143, 36, 0.15);
+}
+
+body.light-theme .commit-dialog-header {
+  background: rgba(240, 245, 240, 0.9);
+}
+
+body.light-theme .commit-dialog-file {
+  background: rgba(0, 143, 36, 0.05);
+}
+
+body.light-theme .commit-btn-primary {
+  background: #008f24;
+  border-color: #008f24;
+  color: #ffffff;
+}

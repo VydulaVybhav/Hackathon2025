@@ -1,0 +1,48 @@
+.diff-viewer {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.diff-viewer-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--primary-color);
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 10;
+}
+
+.diff-viewer-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.diff-viewer-error p {
+  margin: 4px 0;
+}
+
+.diff-viewer-error-detail {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.diff-viewer .monaco-diff-editor {
+  background: var(--bg-color);
+}
+
+.diff-viewer .original-in-monaco-diff-editor {
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.diff-viewer .modified-in-monaco-diff-editor {
+  background: rgba(0, 255, 0, 0.05);
+}

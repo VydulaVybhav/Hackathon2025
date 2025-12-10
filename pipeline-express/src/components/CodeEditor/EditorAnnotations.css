@@ -1,0 +1,416 @@
+/* Annotations Panel */
+.editor-annotations-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border-left: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+/* Header */
+.annotations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(26, 46, 26, 0.4);
+}
+
+.annotations-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-color);
+}
+
+.annotations-title svg {
+  color: var(--primary-color);
+}
+
+.annotations-title h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.annotations-count {
+  padding: 2px 8px;
+  background: var(--primary-color);
+  color: var(--bg-color);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.annotations-add-btn {
+  padding: 6px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.annotations-add-btn:hover {
+  background: var(--primary-color);
+  color: var(--bg-color);
+  border-color: var(--primary-color);
+}
+
+/* Chess Legend */
+.annotations-legend {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.legend-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-color);
+  opacity: 0.7;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.legend-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.legend-symbol {
+  font-weight: 900;
+  font-size: 13px;
+  width: 20px;
+  text-align: center;
+}
+
+.legend-label {
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+/* Current Line */
+.annotations-current-line {
+  padding: 8px 16px;
+  background: rgba(0, 255, 65, 0.1);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  color: var(--text-color);
+}
+
+.annotations-current-line strong {
+  color: var(--primary-color);
+  font-family: monospace;
+}
+
+/* Input Card */
+.annotation-input-card {
+  margin: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.annotation-input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.annotation-input-header button {
+  padding: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.annotation-input-header button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.annotation-type-select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+  font-size: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.annotation-type-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--shadow-color);
+}
+
+.annotation-textarea,
+.annotation-edit-textarea {
+  width: 100%;
+  padding: 10px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.annotation-textarea:focus,
+.annotation-edit-textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--shadow-color);
+}
+
+.annotation-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.annotation-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.annotation-btn-cancel {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.annotation-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.annotation-btn-primary {
+  background: var(--primary-color);
+  color: var(--bg-color);
+  border: 1px solid var(--primary-color);
+}
+
+.annotation-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 15px var(--shadow-color);
+  transform: translateY(-1px);
+}
+
+.annotation-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Annotations List */
+.annotations-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.annotations-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.annotations-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.annotations-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.annotations-list::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* Empty State */
+.annotations-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-color);
+  opacity: 0.5;
+}
+
+.annotations-empty p {
+  margin: 12px 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.annotations-empty small {
+  font-size: 12px;
+}
+
+/* Line Group */
+.annotation-line-group {
+  margin-bottom: 16px;
+}
+
+.annotation-line-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px 6px 0 0;
+  margin-bottom: 8px;
+}
+
+.annotation-line-number {
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.annotation-count-badge {
+  padding: 2px 6px;
+  background: var(--primary-color);
+  color: var(--bg-color);
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Annotation Card */
+.annotation-card {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-left: 3px solid var(--primary-color);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.annotation-card:hover {
+  background: rgba(0, 0, 0, 0.3);
+  transform: translateX(2px);
+}
+
+.annotation-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.annotation-symbol {
+  font-weight: 900;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.annotation-type-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-color);
+  opacity: 0.7;
+  flex: 1;
+}
+
+.annotation-card-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.annotation-card-actions button {
+  padding: 4px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.annotation-card-actions button:hover {
+  background: var(--primary-color);
+  color: var(--bg-color);
+  border-color: var(--primary-color);
+}
+
+.annotation-delete-btn:hover {
+  background: #ff4444 !important;
+  border-color: #ff4444 !important;
+}
+
+.annotation-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-color);
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+
+.annotation-timestamp {
+  font-size: 10px;
+  color: var(--text-color);
+  opacity: 0.5;
+}
+
+/* Light Theme */
+body.light-theme .annotations-header,
+body.light-theme .annotations-legend,
+body.light-theme .annotations-current-line {
+  background: rgba(240, 245, 240, 0.5);
+}
+
+body.light-theme .annotation-input-card {
+  background: rgba(0, 143, 36, 0.05);
+  border-color: #008f24;
+}
+
+body.light-theme .annotation-card {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-theme .annotation-card:hover {
+  background: rgba(0, 143, 36, 0.08);
+}
