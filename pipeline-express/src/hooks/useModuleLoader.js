@@ -20,10 +20,10 @@ export const useModuleLoader = () => {
     // Check if ADO is configured
     if (!adoService.isConfigured()) {
       const missingVars = [];
-      if (!process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_ORG) missingVars.push('REACT_APP_ADO_ORG');
-      if (!process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_PROJECT) missingVars.push('REACT_APP_ADO_PROJECT');
-      if (!process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_REPO) missingVars.push('REACT_APP_ADO_REPO');
-      if (!process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_PAT) missingVars.push('REACT_APP_ADO_PAT');
+      if (!process.env.REACT_APP_ADO_ORG) missingVars.push('REACT_APP_ADO_ORG');
+      if (!process.env.REACT_APP_ADO_PROJECT) missingVars.push('REACT_APP_ADO_PROJECT');
+      if (!process.env.REACT_APP_ADO_REPO) missingVars.push('REACT_APP_ADO_REPO');
+      if (!process.env.REACT_APP_ADO_PAT) missingVars.push('REACT_APP_ADO_PAT');
 
       const errorMsg = `ADO not configured. Missing: ${missingVars.join(', ')}`;
       console.error(errorMsg);

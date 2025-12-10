@@ -227,6 +227,17 @@
   color: #0a0f0a;
 }
 
+.wb-button-active {
+  background: var(--primary-color);
+  color: #0a0f0a;
+  box-shadow: 0 0 15px var(--shadow-color);
+}
+
+.wb-button-active:hover {
+  background: var(--primary-color);
+  opacity: 0.9;
+}
+
 .wb-stats-panel {
   background: var(--card-bg);
   backdrop-filter: blur(10px);

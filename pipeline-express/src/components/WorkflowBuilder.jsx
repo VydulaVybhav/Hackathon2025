@@ -12,13 +12,16 @@ import {
   ConnectionMode,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Play, Home as HomeIcon, Palette, FolderOpen, Settings } from 'lucide-react';
+import { Play, Home as HomeIcon, Palette, FolderOpen, Settings, Code2 } from 'lucide-react';
 import CustomNode from './workflow/CustomNode';
 import SaveWorkflowDialog from './workflow/SaveWorkflowDialog';
 import ModulePanel from './workflow/ModulePanel';
 import ConfigPanel from './workflow/ConfigPanel';
 import EnvironmentConfigDialog from './EnvironmentConfigDialog';
 import SupabaseWarning from './SupabaseWarning';
+import { CodeEditorModal } from './CodeEditor';
+import CommitDialog from './GitFileBrowser/CommitDialog';
+import { adoService } from '../services/adoService';
 import { useWorkflow } from '../hooks/useWorkflow';
 import { useWorkflowStorage } from '../hooks/useWorkflowStorage';
 import { useModuleLoader } from '../hooks/useModuleLoader';
@@ -39,7 +42,13 @@ const WorkflowBuilder = () => {
   const [workflowName, setWorkflowName] = useState('Untitled Workflow');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showEnvConfigDialog, setShowEnvConfigDialog] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const [showGlobalCodeEditor, setShowGlobalCodeEditor] = useState(false);
+  const [globalCodeContent, setGlobalCodeContent] = useState('');
+  const [selectedGitFile, setSelectedGitFile] = useState(null);
+  const [pendingCommitFile, setPendingCommitFile] = useState(null); // Store file info for commit
+  const [showCommitDialog, setShowCommitDialog] = useState(false);
+  const [isCommitting, setIsCommitting] = useState(false);
+  const { theme, toggleTheme} = useTheme();
   const { currentEnv } = useEnvironment();
   const { showSuccess, showError } = useToast();
   const { modules, isLoading: isLoadingModules, error: moduleError, source: moduleSource } = useModuleLoader();
@@ -110,6 +119,45 @@ const WorkflowBuilder = () => {
       }
     }
     setShowSaveDialog(false);
+  };
+
+  const handleCommitFile = async (commitMessage) => {
+    console.log('handleCommitFile called', { pendingCommitFile, commitMessage, globalCodeContent: globalCodeContent.substring(0, 50) });
+
+    if (!pendingCommitFile) {
+      console.error('No pendingCommitFile!');
+      showError('No file selected for commit');
+      return;
+    }
+
+    if (!commitMessage || !commitMessage.trim()) {
+      showError('Commit message is required');
+      return;
+    }
+
+    try {
+      setIsCommitting(true);
+      console.log('Committing file:', pendingCommitFile.path);
+
+      const result = await adoService.commitFileChange(
+        pendingCommitFile.path,
+        globalCodeContent,
+        commitMessage,
+        pendingCommitFile.id
+      );
+
+      console.log('Commit result:', result);
+      showSuccess(`Committed ${pendingCommitFile.name} successfully!`);
+      setShowCommitDialog(false);
+      setShowGlobalCodeEditor(false);
+      setSelectedGitFile(null);
+      setPendingCommitFile(null);
+    } catch (error) {
+      console.error('Commit failed:', error);
+      showError(`Failed to commit: ${error.message}`);
+    } finally {
+      setIsCommitting(false);
+    }
   };
 
   const edgeOptions = useMemo(
@@ -212,6 +260,15 @@ const WorkflowBuilder = () => {
               </button>
 
               <button
+                onClick={() => setShowGlobalCodeEditor(true)}
+                className="wb-button wb-settings-button"
+                title="Open Code Workspace"
+              >
+                <Code2 size={16} />
+                <span>Code</span>
+              </button>
+
+              <button
                 onClick={() => setShowSaveDialog(true)}
                 disabled={isSaving || nodes.length === 0}
                 className="wb-button wb-settings-button"
@@ -282,6 +339,47 @@ const WorkflowBuilder = () => {
         isOpen={showEnvConfigDialog}
         onClose={() => setShowEnvConfigDialog(false)}
         nodes={nodes}
+      />
+
+      {/* Global Code Editor - Now with IDE mode */}
+      <CodeEditorModal
+        isOpen={showGlobalCodeEditor}
+        onClose={() => {
+          setShowGlobalCodeEditor(false);
+          setSelectedGitFile(null);
+        }}
+        initialValue={globalCodeContent}
+        onSave={(newValue) => {
+          console.log('onSave called', { hasSelectedGitFile: !!selectedGitFile, fileName: selectedGitFile?.name });
+          setGlobalCodeContent(newValue);
+          if (selectedGitFile) {
+            // Store file info for commit and open commit dialog
+            console.log('Opening commit dialog for:', selectedGitFile);
+            setPendingCommitFile(selectedGitFile);
+            setShowCommitDialog(true);
+          } else {
+            showSuccess('Code saved to clipboard!');
+            navigator.clipboard.writeText(newValue);
+          }
+        }}
+        language={selectedGitFile ? selectedGitFile.language : 'yaml'}
+        title={selectedGitFile ? selectedGitFile.path : 'Workflow Code Editor'}
+        readOnly={false}
+        showSuccess={showSuccess}
+        showError={showError}
+        ideMode={true}
+      />
+
+      {/* Commit Dialog (for old single-file workflow, kept for compatibility) */}
+      <CommitDialog
+        isOpen={showCommitDialog}
+        onClose={() => {
+          setShowCommitDialog(false);
+          setPendingCommitFile(null);
+        }}
+        onCommit={handleCommitFile}
+        fileName={pendingCommitFile?.path || ''}
+        isLoading={isCommitting}
       />
     </div>
   );

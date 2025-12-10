@@ -15,12 +15,12 @@ import { ADO_CONFIG } from '../constants/appConstants';
 
 class ADOService {
   constructor() {
-    this.organization = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_ORG;
-    this.project = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_PROJECT;
-    this.repository = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_REPO;
-    this.pat = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_PAT;
-    this.modulesPath = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_MODULES_PATH || ADO_CONFIG.DEFAULT_MODULES_PATH;
-    this.branch = process.env.HYPERPLANE_CUSTOM_SECRET_KEY_REACT_APP_ADO_BRANCH || ADO_CONFIG.DEFAULT_BRANCH;
+    this.organization = process.env.REACT_APP_ADO_ORG;
+    this.project = process.env.REACT_APP_ADO_PROJECT;
+    this.repository = process.env.REACT_APP_ADO_REPO;
+    this.pat = process.env.REACT_APP_ADO_PAT;
+    this.modulesPath = process.env.REACT_APP_ADO_MODULES_PATH || ADO_CONFIG.DEFAULT_MODULES_PATH;
+    this.branch = process.env.REACT_APP_ADO_BRANCH || ADO_CONFIG.DEFAULT_BRANCH;
 
     this.baseUrl = `https://dev.azure.com/${this.organization}/${this.project}/_apis`;
   }
@@ -206,6 +206,426 @@ class ADOService {
       return modules;
     } catch (error) {
       console.error('Error fetching modules from ADO:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Browse entire Git repository (recursive file tree)
+   */
+  async getRepositoryTree(path = '/', recursionLevel = 'Full') {
+    if (!this.isConfigured()) {
+      throw new Error('ADO configuration incomplete');
+    }
+
+    try {
+      const url = `${this.baseUrl}/git/repositories/${this.repository}/items?` +
+        `scopePath=${path}&` +
+        `recursionLevel=${recursionLevel}&` +
+        `versionDescriptor.version=${this.branch}&` +
+        `api-version=${ADO_CONFIG.API_VERSION}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch repository tree: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return this.formatFileTree(data.value);
+    } catch (error) {
+      console.error('Error fetching repository tree:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Format ADO file tree into hierarchical structure
+   */
+  formatFileTree(items) {
+    const tree = [];
+    const pathMap = new Map();
+
+    // First pass: create all nodes
+    items.forEach(item => {
+      const parts = item.path.split('/').filter(p => p);
+      const fileName = parts[parts.length - 1];
+
+      const node = {
+        id: item.objectId || item.path,
+        name: fileName || 'root',
+        path: item.path,
+        isFolder: item.isFolder || item.gitObjectType === 'tree',
+        size: item.size,
+        url: item.url,
+        children: item.isFolder ? [] : undefined,
+      };
+
+      pathMap.set(item.path, node);
+    });
+
+    // Second pass: build hierarchy
+    items.forEach(item => {
+      const parts = item.path.split('/').filter(p => p);
+      const node = pathMap.get(item.path);
+
+      if (parts.length === 1) {
+        // Top-level item
+        tree.push(node);
+      } else {
+        // Nested item - find parent
+        const parentPath = '/' + parts.slice(0, -1).join('/');
+        const parent = pathMap.get(parentPath);
+
+        if (parent && parent.children) {
+          parent.children.push(node);
+        } else {
+          // Parent not found, add to root as fallback
+          console.warn(`Parent not found for ${item.path}, expected parent: ${parentPath}`);
+          tree.push(node);
+        }
+      }
+    });
+
+    // Sort children alphabetically (folders first, then files)
+    const sortNodes = (nodes) => {
+      nodes.sort((a, b) => {
+        if (a.isFolder && !b.isFolder) return -1;
+        if (!a.isFolder && b.isFolder) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      nodes.forEach(node => {
+        if (node.children) {
+          sortNodes(node.children);
+        }
+      });
+    };
+
+    sortNodes(tree);
+    return tree;
+  }
+
+  /**
+   * Get list of branches in the repository
+   */
+  async getBranches() {
+    if (!this.isConfigured()) {
+      throw new Error('ADO configuration incomplete');
+    }
+
+    try {
+      const url = `${this.baseUrl}/git/repositories/${this.repository}/refs?` +
+        `filter=heads/&` +
+        `api-version=${ADO_CONFIG.API_VERSION}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch branches: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.value.map(ref => ({
+        name: ref.name.replace('refs/heads/', ''),
+        objectId: ref.objectId,
+        creator: ref.creator,
+      }));
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get commits for a specific file or path
+   */
+  async getCommitHistory(itemPath, maxCommits = 50) {
+    if (!this.isConfigured()) {
+      throw new Error('ADO configuration incomplete');
+    }
+
+    try {
+      const url = `${this.baseUrl}/git/repositories/${this.repository}/commits?` +
+        `searchCriteria.itemPath=${itemPath}&` +
+        `searchCriteria.$top=${maxCommits}&` +
+        `searchCriteria.itemVersion.version=${this.branch}&` +
+        `api-version=${ADO_CONFIG.API_VERSION}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch commit history: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.value.map(commit => ({
+        commitId: commit.commitId,
+        author: commit.author.name,
+        authorEmail: commit.author.email,
+        date: commit.author.date,
+        message: commit.comment,
+        changeCounts: commit.changeCounts,
+      }));
+    } catch (error) {
+      console.error('Error fetching commit history:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Search files in repository
+   */
+  async searchFiles(query) {
+    if (!this.isConfigured()) {
+      throw new Error('ADO configuration incomplete');
+    }
+
+    try {
+      const tree = await this.getRepositoryTree('/', 'Full');
+
+      const filterTree = (nodes, searchQuery) => {
+        const results = [];
+        const lowerQuery = searchQuery.toLowerCase();
+
+        for (const node of nodes) {
+          if (node.name.toLowerCase().includes(lowerQuery)) {
+            results.push(node);
+          }
+          if (node.children) {
+            results.push(...filterTree(node.children, searchQuery));
+          }
+        }
+        return results;
+      };
+
+      return filterTree(tree, query);
+    } catch (error) {
+      console.error('Error searching files:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get file content at specific commit
+   */
+  async getFileAtCommit(filePath, commitId) {
+    try {
+      const url = `${this.baseUrl}/git/repositories/${this.repository}/items?` +
+        `path=${filePath}&` +
+        `versionDescriptor.versionType=commit&` +
+        `versionDescriptor.version=${commitId}&` +
+        `api-version=${ADO_CONFIG.API_VERSION}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file at commit: ${response.status}`);
+      }
+
+      return await response.text();
+    } catch (error) {
+      console.error('Error fetching file at commit:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create or update a file in the repository
+   * @param {string} filePath - Path to the file (e.g., '/modules/example.yaml')
+   * @param {string} content - New file content
+   * @param {string} commitMessage - Commit message
+   * @param {string} fileObjectId - Object ID of the file being updated (null for new files)
+   * @returns {Promise} - Commit result
+   */
+  async commitFileChange(filePath, content, commitMessage, fileObjectId = null) {
+    if (!this.isConfigured()) {
+      throw new Error('ADO configuration incomplete');
+    }
+
+    try {
+      // Check if file exists to determine changeType
+      let changeType = 'add';
+      if (fileObjectId) {
+        // File has an object ID, so it exists - use 'edit'
+        changeType = 'edit';
+      } else {
+        // Double-check if file exists by trying to fetch it
+        try {
+          await this.getFileContent(filePath);
+          changeType = 'edit'; // File exists
+        } catch (e) {
+          changeType = 'add'; // File doesn't exist
+        }
+      }
+
+      console.log(`Change type for ${filePath}: ${changeType}`);
+
+      // Get the latest commit to use as the base
+      const refsUrl = `${this.baseUrl}/git/repositories/${this.repository}/refs?` +
+        `filter=heads/${this.branch}&` +
+        `api-version=${ADO_CONFIG.API_VERSION}`;
+
+      const refsResponse = await fetch(refsUrl, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!refsResponse.ok) {
+        throw new Error(`Failed to get branch ref: ${refsResponse.status}`);
+      }
+
+      const refsData = await refsResponse.json();
+      const branchRef = refsData.value[0];
+
+      if (!branchRef) {
+        throw new Error(`Branch ${this.branch} not found`);
+      }
+
+      const oldCommitId = branchRef.objectId;
+
+      // Create the push payload
+      const pushPayload = {
+        refUpdates: [
+          {
+            name: `refs/heads/${this.branch}`,
+            oldObjectId: oldCommitId,
+          }
+        ],
+        commits: [
+          {
+            comment: commitMessage,
+            changes: [
+              {
+                changeType: changeType,
+                item: {
+                  path: filePath,
+                },
+                newContent: {
+                  content: content,
+                  contentType: 'rawtext',
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      // Push the change
+      const pushUrl = `${this.baseUrl}/git/repositories/${this.repository}/pushes?` +
+        `api-version=${ADO_CONFIG.API_VERSION}`;
+
+      const pushResponse = await fetch(pushUrl, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(pushPayload),
+      });
+
+      if (!pushResponse.ok) {
+        const errorText = await pushResponse.text();
+        throw new Error(`Failed to push changes: ${pushResponse.status} - ${errorText}`);
+      }
+
+      const pushData = await pushResponse.json();
+      return {
+        success: true,
+        commitId: pushData.commits[0].commitId,
+        pushId: pushData.pushId,
+      };
+    } catch (error) {
+      console.error('Error committing file change:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a file from the repository
+   * @param {string} filePath - Path to the file to delete
+   * @param {string} commitMessage - Commit message
+   * @returns {Promise} - Commit result
+   */
+  async deleteFile(filePath, commitMessage) {
+    if (!this.isConfigured()) {
+      throw new Error('ADO configuration incomplete');
+    }
+
+    try {
+      // Get the latest commit
+      const refsUrl = `${this.baseUrl}/git/repositories/${this.repository}/refs?` +
+        `filter=heads/${this.branch}&` +
+        `api-version=${ADO_CONFIG.API_VERSION}`;
+
+      const refsResponse = await fetch(refsUrl, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!refsResponse.ok) {
+        throw new Error(`Failed to get branch ref: ${refsResponse.status}`);
+      }
+
+      const refsData = await refsResponse.json();
+      const branchRef = refsData.value[0];
+      const oldCommitId = branchRef.objectId;
+
+      // Create the push payload
+      const pushPayload = {
+        refUpdates: [
+          {
+            name: `refs/heads/${this.branch}`,
+            oldObjectId: oldCommitId,
+          }
+        ],
+        commits: [
+          {
+            comment: commitMessage,
+            changes: [
+              {
+                changeType: 'delete',
+                item: {
+                  path: filePath,
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      // Push the change
+      const pushUrl = `${this.baseUrl}/git/repositories/${this.repository}/pushes?` +
+        `api-version=${ADO_CONFIG.API_VERSION}`;
+
+      const pushResponse = await fetch(pushUrl, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(pushPayload),
+      });
+
+      if (!pushResponse.ok) {
+        const errorText = await pushResponse.text();
+        throw new Error(`Failed to delete file: ${pushResponse.status} - ${errorText}`);
+      }
+
+      const pushData = await pushResponse.json();
+      return {
+        success: true,
+        commitId: pushData.commits[0].commitId,
+        pushId: pushData.pushId,
+      };
+    } catch (error) {
+      console.error('Error deleting file:', error);
       throw error;
     }
   }

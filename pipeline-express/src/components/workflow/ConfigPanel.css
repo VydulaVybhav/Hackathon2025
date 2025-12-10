@@ -154,6 +154,43 @@
   font-size: 0.85rem;
 }
 
+/* Code Editor Button */
+.wb-config-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.wb-config-input-group .wb-config-input {
+  flex: 1;
+}
+
+.wb-config-code-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.wb-config-code-btn:hover {
+  background: var(--primary-color);
+  color: var(--bg-color);
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.wb-config-code-btn svg {
+  stroke-width: 2;
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .wb-config-all-envs {

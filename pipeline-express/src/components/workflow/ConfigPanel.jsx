@@ -1,7 +1,8 @@
-import React from 'react';
-import { Trash2, Settings, Globe } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trash2, Settings, Globe, Code2 } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { useEnvironment } from '../../context/EnvironmentContext';
+import { CodeEditorModal } from '../CodeEditor';
 import './ConfigPanel.css';
 
 /**
@@ -11,6 +12,12 @@ import './ConfigPanel.css';
  */
 const ConfigPanel = ({ selectedNode, onDelete, onUpdateConfig }) => {
   const { currentEnv } = useEnvironment();
+  const [codeEditorState, setCodeEditorState] = useState({
+    isOpen: false,
+    paramName: '',
+    value: '',
+    language: 'yaml',
+  });
 
   if (!selectedNode) return null;
 
@@ -41,6 +48,59 @@ const ConfigPanel = ({ selectedNode, onDelete, onUpdateConfig }) => {
     // Update only the current environment config for this specific node instance
     // This is a per-run override and won't be saved to database defaults
     onUpdateConfig(selectedNode.id, currentEnv, { [paramName]: value });
+  };
+
+  /**
+   * Detect language for code editor based on parameter name or value
+   */
+  const detectLanguage = (paramName, value) => {
+    const name = paramName.toLowerCase();
+    const val = (value || '').trim();
+
+    // Check by parameter name
+    if (name.includes('yaml') || name.includes('yml')) return 'yaml';
+    if (name.includes('json')) return 'json';
+    if (name.includes('python') || name.includes('py') || name.includes('script')) return 'python';
+    if (name.includes('bash') || name.includes('shell') || name.includes('sh')) return 'bash';
+    if (name.includes('powershell') || name.includes('ps1')) return 'powershell';
+    if (name.includes('javascript') || name.includes('js')) return 'javascript';
+    if (name.includes('typescript') || name.includes('ts')) return 'typescript';
+    if (name.includes('sql')) return 'sql';
+
+    // Check by value content
+    if (val.startsWith('{') || val.startsWith('[')) return 'json';
+    if (val.includes('#!/bin/bash') || val.includes('#!/bin/sh')) return 'bash';
+    if (val.includes('def ') || val.includes('import ')) return 'python';
+
+    // Default to YAML for multi-line content
+    return val.includes('\n') ? 'yaml' : 'text';
+  };
+
+  /**
+   * Open code editor for a parameter
+   */
+  const openCodeEditor = (paramName, value) => {
+    setCodeEditorState({
+      isOpen: true,
+      paramName,
+      value: value || '',
+      language: detectLanguage(paramName, value),
+    });
+  };
+
+  /**
+   * Save code editor changes
+   */
+  const handleCodeEditorSave = (newValue) => {
+    handleFieldChange(codeEditorState.paramName, newValue);
+    setCodeEditorState({ isOpen: false, paramName: '', value: '', language: 'yaml' });
+  };
+
+  /**
+   * Close code editor without saving
+   */
+  const closeCodeEditor = () => {
+    setCodeEditorState({ isOpen: false, paramName: '', value: '', language: 'yaml' });
   };
 
   /**
@@ -83,13 +143,23 @@ const ConfigPanel = ({ selectedNode, onDelete, onUpdateConfig }) => {
                   </span>
                 )}
               </label>
-              <input
-                type="text"
-                value={paramValue}
-                placeholder={paramDefault}
-                onChange={(e) => handleFieldChange(paramName, e.target.value)}
-                className="wb-config-input"
-              />
+              <div className="wb-config-input-group">
+                <input
+                  type="text"
+                  value={paramValue}
+                  placeholder={paramDefault}
+                  onChange={(e) => handleFieldChange(paramName, e.target.value)}
+                  className="wb-config-input"
+                />
+                <button
+                  onClick={() => openCodeEditor(paramName, paramValue)}
+                  className="wb-config-code-btn"
+                  title="Open in code editor"
+                  type="button"
+                >
+                  <Code2 size={16} />
+                </button>
+              </div>
               {paramDefault && !paramValue && (
                 <span className="wb-config-hint">Default: {paramDefault}</span>
               )}
@@ -101,38 +171,51 @@ const ConfigPanel = ({ selectedNode, onDelete, onUpdateConfig }) => {
   };
 
   return (
-    <div className="wb-config-panel">
-      <div className="wb-config-header">
-        <h3 className="wb-config-title">
-          <Settings size={18} />
-          Module Config
-        </h3>
-        <button onClick={onDelete} className="wb-delete-button" title="Delete node">
-          <Trash2 size={16} />
-        </button>
-      </div>
-
-      {/* Module Info */}
-      <div className="wb-config-module-info">
-        <div className="wb-config-field">
-          <label className="wb-config-label">Module Type</label>
-          <div className="wb-config-readonly">
-            {selectedNode.data.label}
-          </div>
+    <>
+      <div className="wb-config-panel">
+        <div className="wb-config-header">
+          <h3 className="wb-config-title">
+            <Settings size={18} />
+            Module Config
+          </h3>
+          <button onClick={onDelete} className="wb-delete-button" title="Delete node">
+            <Trash2 size={16} />
+          </button>
         </div>
-        {selectedNode.data.description && (
+
+        {/* Module Info */}
+        <div className="wb-config-module-info">
           <div className="wb-config-field">
-            <label className="wb-config-label">Description</label>
-            <div className="wb-config-readonly small">
-              {selectedNode.data.description}
+            <label className="wb-config-label">Module Type</label>
+            <div className="wb-config-readonly">
+              {selectedNode.data.label}
             </div>
           </div>
-        )}
+          {selectedNode.data.description && (
+            <div className="wb-config-field">
+              <label className="wb-config-label">Description</label>
+              <div className="wb-config-readonly small">
+                {selectedNode.data.description}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Config Fields */}
+        {renderCurrentEnvFields()}
       </div>
 
-      {/* Config Fields */}
-      {renderCurrentEnvFields()}
-    </div>
+      {/* Code Editor Modal */}
+      <CodeEditorModal
+        isOpen={codeEditorState.isOpen}
+        onClose={closeCodeEditor}
+        initialValue={codeEditorState.value}
+        onSave={handleCodeEditorSave}
+        language={codeEditorState.language}
+        title={`Edit ${codeEditorState.paramName}`}
+        readOnly={false}
+      />
+    </>
   );
 };
 
