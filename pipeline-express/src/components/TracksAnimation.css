@@ -1,0 +1,32 @@
+.tracks-animation-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0.4;
+}
+
+.track-path {
+    fill: none;
+    stroke: var(--border-color);
+    stroke-width: 2;
+    stroke-dasharray: 10, 10;
+}
+
+.train-body {
+    fill: var(--primary-color);
+    filter: drop-shadow(0 0 8px var(--primary-color));
+}
+
+.train-window {
+    fill: var(--bg-color);
+}
+
+.train-light {
+    fill: #fff;
+    filter: drop-shadow(0 0 5px #fff);
+}
