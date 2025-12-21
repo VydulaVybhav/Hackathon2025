@@ -1,6 +1,6 @@
 .saved-workflows-container {
   min-height: 100vh;
-  padding: 100px 5% 40px;
+  padding: 0;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -239,7 +239,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .saved-workflows-container {
-    padding: 80px 5% 40px;
+    padding: 0;
   }
 
   .saved-workflows-header h1 {

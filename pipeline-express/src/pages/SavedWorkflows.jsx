@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import DashboardLayout from '../components/DashboardLayout';
 import SupabaseWarning from '../components/SupabaseWarning';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useWorkflowStorage } from '../hooks/useWorkflowStorage';
@@ -87,8 +87,7 @@ const SavedWorkflows = () => {
   };
 
   return (
-    <div>
-      <Navbar />
+    <DashboardLayout>
       <SupabaseWarning />
       <div className="saved-workflows-container">
         <div className="saved-workflows-header">
@@ -196,7 +195,7 @@ const SavedWorkflows = () => {
         cancelText={CONFIRM_DIALOG.CANCEL_TEXT}
         variant="danger"
       />
-    </div>
+    </DashboardLayout>
   );
 };
 

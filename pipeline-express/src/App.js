@@ -8,7 +8,9 @@ import Toast from './components/Toast';
 import Home from './pages/Home';
 import WorkflowBuilder from './components/WorkflowBuilder';
 import SavedWorkflows from './pages/SavedWorkflows';
+import Templates from './pages/Templates';
 import { authService } from './services/authService';
+import CustomCursor from './components/CustomCursor';
 import './index.css';
 
 function App() {
@@ -72,12 +74,14 @@ function App() {
           <ToastProvider>
             <Router>
               <div className="App">
+                <CustomCursor />
                 <Toast />
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/builder" element={<WorkflowBuilder />} />
                   <Route path="/builder/:id" element={<WorkflowBuilder />} />
                   <Route path="/saved-workflows" element={<SavedWorkflows />} />
+                  <Route path="/templates" element={<Templates />} />
                 </Routes>
               </div>
             </Router>

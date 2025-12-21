@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { X, Code2, Download, Copy, Check, PanelRightClose, PanelRight, Database, GitCommit, FolderTree, GitCompare } from 'lucide-react';
+import { X, Code2, Download, Copy, Check, PanelRightClose, PanelRight, Database, GitCommit, FolderTree, GitCompare, Terminal as TerminalIcon } from 'lucide-react';
 import EditorAnnotations from './EditorAnnotations';
 import AccuracyScore from './AccuracyScore';
 import DiffViewer from './DiffViewer';
 import { GitFileBrowser } from '../GitFileBrowser';
 import CommitDialog from '../GitFileBrowser/CommitDialog';
 import BranchSwitchDialog from '../GitFileBrowser/BranchSwitchDialog';
+import { Terminal } from '../Terminal';
 import { adoService } from '../../services/adoService';
 import { analyzeCode, generateDemoAnnotations } from '../../utils/aiAnnotationAnalyzer';
 import './CodeEditorModal.css';
@@ -43,6 +44,8 @@ const CodeEditorModal = ({
   const [showDiff, setShowDiff] = useState(false);
   const [showBranchSwitchDialog, setShowBranchSwitchDialog] = useState(false);
   const [pendingBranch, setPendingBranch] = useState(null);
+  const [showTerminal, setShowTerminal] = useState(false);
+  const [terminalMinimized, setTerminalMinimized] = useState(false);
 
   useEffect(() => {
     if (!ideMode) {
@@ -294,6 +297,10 @@ const CodeEditorModal = ({
 
           if (isModified) {
             newModified.add(tab.path);
+            // Sync with terminal virtual shell
+            if (typeof window !== 'undefined' && window.adoVirtualShell) {
+              window.adoVirtualShell.trackChange(tab.path, newContent);
+            }
           } else {
             newModified.delete(tab.path);
           }
@@ -357,7 +364,7 @@ const CodeEditorModal = ({
   return (
     <div
       className="code-editor-overlay"
-      onClick={onClose}
+      onClick={ideMode ? undefined : onClose}
       onKeyDown={(e) => e.stopPropagation()}
     >
       <div
@@ -377,13 +384,22 @@ const CodeEditorModal = ({
           </div>
           <div className="code-editor-actions">
             {ideMode && (
-              <button
-                className="code-editor-btn code-editor-btn-icon"
-                onClick={() => setShowFilesystem(!showFilesystem)}
-                title={showFilesystem ? "Hide filesystem" : "Show filesystem"}
-              >
-                <FolderTree size={18} />
-              </button>
+              <>
+                <button
+                  className="code-editor-btn code-editor-btn-icon"
+                  onClick={() => setShowFilesystem(!showFilesystem)}
+                  title={showFilesystem ? "Hide filesystem" : "Show filesystem"}
+                >
+                  <FolderTree size={18} />
+                </button>
+                <button
+                  className={`code-editor-btn code-editor-btn-icon ${showTerminal ? 'code-editor-btn-active' : ''}`}
+                  onClick={() => setShowTerminal(!showTerminal)}
+                  title={showTerminal ? "Hide terminal" : "Show terminal"}
+                >
+                  <TerminalIcon size={18} />
+                </button>
+              </>
             )}
             {ideMode && activeTab && (
               <button
@@ -579,6 +595,17 @@ const CodeEditorModal = ({
             </div>
           )}
         </div>
+
+        {/* Terminal (IDE mode only) */}
+        {ideMode && showTerminal && (
+          <Terminal
+            isOpen={showTerminal}
+            onClose={() => setShowTerminal(false)}
+            onMinimize={() => setTerminalMinimized(!terminalMinimized)}
+            isMinimized={terminalMinimized}
+            onFileOpen={handleFileSelect}
+          />
+        )}
 
         {/* Footer */}
         <div className="code-editor-footer">
